@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DynamicComponents from '@/components/DynamicComponents';
 import HeroBanner from '@/components/HeroBanner';
+import TradingQuotes from '@/components/TradingQuotes';
 import { getPageData } from '@/lib/contentstack-data';
 
 // ISR: Revalidate every 60 seconds
@@ -28,6 +29,9 @@ export default async function Home() {
         {components.length > 0 && (
           <DynamicComponents components={components} />
         )}
+
+        {/* Trading Quotes Section - Real-time WebSocket */}
+        <TradingQuotes />
 
         {/* Fallback if no CMS content */}
         {!heroArticle && components.length === 0 && (
