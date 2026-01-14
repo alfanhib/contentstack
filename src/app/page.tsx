@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import DynamicComponents from '@/components/DynamicComponents';
+import DynamicComponents, { ComponentData } from '@/components/DynamicComponents';
 import HeroBanner from '@/components/HeroBanner';
 import TradingQuotes from '@/components/TradingQuotes';
-import { getPageData } from '@/lib/contentstack-data';
+import { getPageData, ArticleEntry } from '@/lib/contentstack-data';
 
 // ISR: Revalidate every 60 seconds
 export const revalidate = 60;
@@ -13,10 +14,10 @@ export default async function Home() {
   const pageData = await getPageData();
 
   // Get hero article reference (first item in hero array)
-  const heroArticle = pageData?.hero?.[0];
+  const heroArticle: ArticleEntry | undefined = pageData?.hero?.[0];
 
   // Get components
-  const components = pageData?.components || [];
+  const components = (pageData?.components || []) as ComponentData[];
 
   return (
     <>
@@ -41,7 +42,7 @@ export default async function Home() {
               <h1>Welcome to <span className="highlight">StockTrade</span></h1>
               <p>Your trusted platform for smart investing. Trade stocks, ETFs, and cryptocurrencies with confidence.</p>
               <div className="hero-buttons">
-                <a href="/about-us" className="btn btn-primary">Explore More →</a>
+                <Link href="/about-us" className="btn btn-primary">Explore More →</Link>
               </div>
             </div>
           </section>

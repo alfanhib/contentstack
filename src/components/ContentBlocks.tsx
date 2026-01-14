@@ -25,6 +25,7 @@ export default function ContentBlocks({ blocks }: ContentBlocksProps) {
         <div className="space-y-16">
           {blocks.map((item, index) => {
             const block = item.block;
+            if (!block) return null;
             const isImageLeft = block.layout === 'image_left';
 
             return (

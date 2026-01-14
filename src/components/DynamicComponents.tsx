@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-interface ComponentData {
+export interface ComponentData {
   [key: string]: any;
 }
 

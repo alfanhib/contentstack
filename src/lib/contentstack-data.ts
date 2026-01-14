@@ -27,6 +27,8 @@ export interface PageEntry {
   image?: ContentstackImage;
   rich_text?: string;
   blocks?: ModularBlock[];
+  hero?: ArticleEntry[];
+  components?: unknown[];
   [key: string]: unknown;
 }
 
