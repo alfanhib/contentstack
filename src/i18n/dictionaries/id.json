@@ -1,0 +1,22 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "retry": "Coba lagi",
+    "close": "Tutup",
+    "menu": "Menu",
+    "search": "Cari"
+  },
+  "navigation": {
+    "home": "Beranda",
+    "about": "Tentang",
+    "contact": "Kontak",
+    "login": "Masuk",
+    "signup": "Daftar"
+  },
+  "footer": {
+    "copyright": "© 2025 Pepperstone. Semua hak dilindungi.",
+    "privacyPolicy": "Kebijakan Privasi",
+    "termsOfService": "Syarat Layanan"
+  }
+}
