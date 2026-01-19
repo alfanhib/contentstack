@@ -8,16 +8,11 @@ interface LocaleLayoutProps {
   params: Promise<{ locale: Locale }>;
 }
 
-/**
- * Generate static params for all locales
- */
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-/**
- * Generate metadata for the locale
- */
+
 export async function generateMetadata({
   params,
 }: {
@@ -39,22 +34,15 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Locale-specific layout
- */
 export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params;
   const _isRtl = isRtlLocale(locale);
-  // Dictionary will be used when implementing translations
-  // const dictionary = await getDictionary(locale);
 
   return (
-    <html lang={locale} dir={_isRtl ? 'rtl' : 'ltr'}>
-      <body>
-        {/* Navigation will go here */}
-        <main>{children}</main>
-        {/* Footer will go here */}
-      </body>
-    </html>
+    <>
+      <main data-locale={locale} dir={_isRtl ? 'rtl' : 'ltr'}>
+        {children}
+      </main>
+    </>
   );
 }

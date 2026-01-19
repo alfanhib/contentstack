@@ -5,10 +5,6 @@ interface LocaleHomePageProps {
   params: Promise<{ locale: Locale }>;
 }
 
-/**
- * Locale-specific homepage
- * Content will be fetched from Contentstack when CMS is ready
- */
 export default async function LocaleHomePage({ params }: LocaleHomePageProps) {
   const { locale } = await params;
   const dictionary = await getDictionary(locale);
