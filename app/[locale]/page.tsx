@@ -1,44 +1,54 @@
-import type { Locale } from '@config/locales';
-import { getDictionary } from '@/i18n';
+import {
+  getHomePage,
+  getWebConfig,
+  getAllMegaMenus,
+} from '@/lib/contentstack';
+import { Header, Footer, CookieConsent } from '@/components/compass';
+import { HeroBanner } from '@/components/compass/HeroBanner';
+import { ComponentRenderer } from '@/components/blocks';
 
 interface LocaleHomePageProps {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
+}
+
+// Generate static params for homepage
+export async function generateStaticParams() {
+  // Only generate for locales that have content in Contentstack
+  return [{ locale: 'en' }];
 }
 
 export default async function LocaleHomePage({ params }: LocaleHomePageProps) {
   const { locale } = await params;
-  const dictionary = await getDictionary(locale);
+
+  // Fetch content from Contentstack
+  const [homePage, webConfig, megaMenus] = await Promise.all([
+    getHomePage(locale),
+    getWebConfig(locale),
+    getAllMegaMenus(locale),
+  ]);
+
+  // Hero is an Article reference
+  const heroArticle = homePage?.hero?.[0];
+  
+  // Get dynamic components from homepage
+  const components = homePage?.components || [];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - Placeholder */}
-      <section className="flex min-h-[60vh] flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 px-4 text-white">
-        <h1 className="mb-4 text-center text-4xl font-bold md:text-6xl">Pepperstone</h1>
-        <p className="max-w-2xl text-center text-lg text-slate-300 md:text-xl">
-          {locale === 'id'
-            ? 'Platform trading online terpercaya'
-            : 'Your trusted online trading platform'}
-        </p>
-        <div className="mt-8 flex gap-4">
-          <button className="rounded-lg bg-emerald-500 px-6 py-3 font-semibold transition hover:bg-emerald-600">
-            {dictionary.navigation.signup}
-          </button>
-          <button className="rounded-lg border border-white/30 px-6 py-3 font-semibold transition hover:bg-white/10">
-            {dictionary.navigation.login}
-          </button>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header with dynamic navigation */}
+      <Header webConfig={webConfig} megaMenus={megaMenus} locale={locale} />
 
-      {/* Content Sections - Will be dynamic from CMS */}
-      <section className="flex min-h-[40vh] items-center justify-center bg-white px-4">
-        <div className="text-center">
-          <p className="text-slate-500">
-            {locale === 'id'
-              ? 'Konten akan dimuat dari Contentstack'
-              : 'Content will be loaded from Contentstack'}
-          </p>
-        </div>
-      </section>
+      {/* Hero Banner - from hero article reference */}
+      <HeroBanner hero={heroArticle} locale={locale} />
+
+      {/* Dynamic Components from Contentstack */}
+      <ComponentRenderer components={components} locale={locale} />
+
+      {/* Footer with dynamic content */}
+      <Footer webConfig={webConfig} locale={locale} />
+
+      {/* Cookie Consent Banner */}
+      <CookieConsent consentModal={webConfig?.consent_modal} />
     </div>
   );
 }
