@@ -40,6 +40,8 @@ export default async function LocaleHomePage({ params, searchParams }: LocaleHom
   // Hero is an Article reference
   const heroArticle = homePage?.hero?.[0];
 
+  console.log('[isi] hero', heroArticle)
+
   // Get dynamic components from homepage
   const components = homePage?.components || [];
 

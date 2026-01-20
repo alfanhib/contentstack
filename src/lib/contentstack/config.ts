@@ -88,7 +88,7 @@ export function getPersonalizeConfig(): PersonalizeConfig {
 
   return {
     projectUid,
-    edgeApiUrl: process.env.CONTENTSTACK_PERSONALIZE_EDGE_API_URL,
+    edgeApiUrl: process.env.NEXT_PUBLIC_CONTENTSTACK_PERSONALIZE_EDGE_API_URL,
   };
 }
 
