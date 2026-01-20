@@ -1,4 +1,5 @@
 import { getStack } from './client';
+import { getContentstackLocale } from './config';
 
 /**
  * Web Configuration Types
@@ -128,15 +129,16 @@ export async function getWebConfig(locale?: string): Promise<WebConfig | null> {
       'user_form',
     ]);
     query.limit(1);
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0]?.[0] || null;
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch web config:', error);
+  } catch {
     return null;
   }
 }
@@ -151,15 +153,16 @@ export async function getMegaMenu(uid: string, locale?: string): Promise<MegaMen
     
     query.where('uid', uid);
     query.limit(1);
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0]?.[0] || null;
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch mega menu:', error);
+  } catch {
     return null;
   }
 }
@@ -171,15 +174,16 @@ export async function getAllMegaMenus(locale?: string): Promise<MegaMenu[]> {
   try {
     const stack = getStack();
     const query = stack.ContentType('mega_menu').Query();
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0] || [];
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch mega menus:', error);
+  } catch {
     return [];
   }
 }

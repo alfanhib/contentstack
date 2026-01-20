@@ -1,9 +1,18 @@
 import { getStack } from './client';
+import { getContentstackLocale } from './config';
 import type { PageComponent } from './components';
 
 /**
  * Homepage specific content fetching
  */
+
+/**
+ * Options for fetching personalized content
+ */
+export interface PersonalizeOptions {
+  /** Variant aliases to fetch (from Personalize SDK) */
+  variantAliases?: string[];
+}
 
 export interface HeroBanner {
   uid: string;
@@ -77,23 +86,43 @@ export interface Navigation {
 
 /**
  * Get homepage content
+ * Supports personalization variants
  */
-export async function getHomePage(locale?: string): Promise<HomePage | null> {
+export async function getHomePage(
+  locale?: string,
+  personalizeOptions?: PersonalizeOptions
+): Promise<HomePage | null> {
   try {
     const stack = getStack();
     const query = stack.ContentType('home_page').Query();
-    
+
     query.where('url', '/');
     query.includeReference(['hero', 'featured_articles.articles']);
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
+    }
+
+    // Add variant aliases for personalization
+    // Format: cs_personalize_{experienceUid}_{variantUid}
+    if (personalizeOptions?.variantAliases?.length) {
+      // Try using the variants() method if available
+      if (typeof query.variants === 'function') {
+        query.variants(personalizeOptions.variantAliases);
+      } else {
+        // Fallback to addParam
+        query.addParam('include_variant', 'true');
+        query.addParam('variant_alias', personalizeOptions.variantAliases.join(','));
+      }
     }
 
     const result = await query.toJSON().find();
-    return result?.[0]?.[0] || null;
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch homepage:', error);
+    const entry = result?.[0]?.[0];
+    
+    return entry || null;
+  } catch {
     return null;
   }
 }
@@ -105,17 +134,18 @@ export async function getArticles(locale?: string, limit = 10): Promise<Article[
   try {
     const stack = getStack();
     const query = stack.ContentType('article').Query();
-    
+
     query.limit(limit);
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0] || [];
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch articles:', error);
+  } catch {
     return [];
   }
 }
@@ -127,18 +157,19 @@ export async function getNavigation(locale?: string): Promise<Navigation | null>
   try {
     const stack = getStack();
     const query = stack.ContentType('navigation').Query();
-    
+
     query.where('title', 'Top Menu');
     query.limit(1);
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0]?.[0] || null;
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch navigation:', error);
+  } catch {
     return null;
   }
 }
@@ -150,15 +181,16 @@ export async function getHeroBanners(locale?: string): Promise<HeroBanner[]> {
   try {
     const stack = getStack();
     const query = stack.ContentType('hero_banner').Query();
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return result?.[0] || [];
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch hero banners:', error);
+  } catch {
     return [];
   }
 }

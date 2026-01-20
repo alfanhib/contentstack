@@ -6,11 +6,11 @@ import {
   getAllMegaMenus,
   getArticles as fetchArticles,
   getRelatedArticles,
-  getAllPagePaths,
   type ArticlePage,
   type ArticleListingPage,
   type LandingPage,
 } from '@/lib/contentstack';
+import { getVariantAliasesFromSearchParams, getVariantAliases } from '@/lib/personalize';
 import { Header, Footer, CookieConsent } from '@/components/compass';
 import { ArticleTemplate, ArticleListingTemplate, LandingTemplate } from '@/components/templates';
 
@@ -19,45 +19,39 @@ interface DynamicPageProps {
     locale: string;
     slug: string[];
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-// Generate static params for all pages
-export async function generateStaticParams() {
-  const params: { locale: string; slug: string[] }[] = [];
-  
-  // Get all page paths from Contentstack
-  const paths = await getAllPagePaths();
-  
-  // For now, only generate for 'en' locale since that's what exists in Contentstack
-  // In production, you would query Contentstack for each locale
-  const availableLocales = ['en'];
-  
-  // Generate params for each locale and path
-  for (const locale of availableLocales) {
-    for (const path of paths) {
-      // Remove leading slash and split into segments
-      const segments = path.replace(/^\//, '').split('/').filter(Boolean);
-      if (segments.length > 0) {
-        params.push({
-          locale,
-          slug: segments,
-        });
-      }
-    }
+// Disable static generation for personalized content
+export const dynamic = 'force-dynamic';
+
+/**
+ * Helper to get variant aliases from searchParams or cookies fallback
+ */
+async function resolveVariantAliases(
+  searchParams: Record<string, string | string[] | undefined>
+): Promise<string[]> {
+  // Primary: from searchParams (set by Launch Edge Proxy)
+  let variantAliases = getVariantAliasesFromSearchParams(searchParams);
+
+  // Fallback: from cookies (for local dev or non-Launch deployments)
+  if (variantAliases.length === 0) {
+    variantAliases = await getVariantAliases();
   }
-  
-  console.log(`[generateStaticParams] Generated ${params.length} params`);
-  
-  return params;
+
+  return variantAliases;
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: DynamicPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: DynamicPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
+  const resolvedSearchParams = await searchParams;
   const url = `/${slug.join('/')}`;
-  
-  const pageResult = await getPageByUrl(url, locale);
-  
+
+  // Get variants for personalized metadata
+  const variantAliases = await resolveVariantAliases(resolvedSearchParams);
+  const pageResult = await getPageByUrl(url, locale, { variantAliases });
+
   if (!pageResult) {
     return { title: 'Page Not Found' };
   }
@@ -72,21 +66,27 @@ export async function generateMetadata({ params }: DynamicPageProps): Promise<Me
       index: !seo?.no_index,
       follow: !seo?.no_follow,
     },
-    alternates: seo?.canonical_url ? {
-      canonical: seo.canonical_url,
-    } : undefined,
+    alternates: seo?.canonical_url
+      ? {
+          canonical: seo.canonical_url,
+        }
+      : undefined,
   };
 }
 
-export default async function DynamicPage({ params }: DynamicPageProps) {
+export default async function DynamicPage({ params, searchParams }: DynamicPageProps) {
   const { locale, slug } = await params;
-  
+  const resolvedSearchParams = await searchParams;
+
   // Construct URL from slug segments
   const url = `/${slug.join('/')}`;
-  
-  // Fetch page content and web config in parallel
+
+  // Get active variant aliases from personalization
+  const variantAliases = await resolveVariantAliases(resolvedSearchParams);
+
+  // Fetch page content and web config in parallel with personalization
   const [pageResult, webConfig, megaMenus] = await Promise.all([
-    getPageByUrl(url, locale),
+    getPageByUrl(url, locale, { variantAliases }),
     getWebConfig(locale),
     getAllMegaMenus(locale),
   ]);

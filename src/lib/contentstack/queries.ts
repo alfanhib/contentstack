@@ -1,4 +1,5 @@
 import { getStack } from './client';
+import { getContentstackLocale } from './config';
 
 /**
  * Contentstack query builders
@@ -19,14 +20,15 @@ export async function getEntryByUid<T>(
     const stack = getStack();
     const entry = stack.ContentType(contentTypeUid).Entry(entryUid);
 
-    if (locale) {
-      entry.language(locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      entry.language(csLocale);
     }
 
     const result = await entry.toJSON().fetch();
     return result as T;
-  } catch (error) {
-    console.error(`Failed to fetch entry ${entryUid} from ${contentTypeUid}:`, error);
+  } catch {
     return null;
   }
 }
@@ -49,8 +51,10 @@ export async function getEntries<T>(
     const stack = getStack();
     const query = stack.ContentType(contentTypeUid).Query();
 
-    if (options?.locale) {
-      query.language(options.locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(options?.locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     if (options?.limit) {
@@ -84,8 +88,7 @@ export async function getEntries<T>(
     const result = await query.toJSON().find();
     // Contentstack returns [[entries], count]
     return (result?.[0] as T[]) ?? [];
-  } catch (error) {
-    console.error(`Failed to fetch entries from ${contentTypeUid}:`, error);
+  } catch {
     return [];
   }
 }
@@ -106,15 +109,16 @@ export async function getEntryByField<T>(
     query.where(field, value);
     query.limit(1);
 
-    if (locale) {
-      query.language(locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     // Contentstack returns [[entries], count]
     return (result?.[0]?.[0] as T) ?? null;
-  } catch (error) {
-    console.error(`Failed to fetch entry by ${field}=${value} from ${contentTypeUid}:`, error);
+  } catch {
     return null;
   }
 }

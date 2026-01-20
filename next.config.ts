@@ -2,26 +2,29 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /**
-   * Output static HTML for all pages at build time
-   * This enables full SSG for SEO-friendly static site
-   */
-  output: 'export',
-
-  /**
    * Strict mode for React
    */
   reactStrictMode: true,
 
   /**
    * Image optimization settings
-   * Using unoptimized for static export
+   * Configure remote patterns for Contentstack images
    */
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.contentstack.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'eu-images.contentstack.com',
+      },
+    ],
   },
 
   /**
-   * Trailing slash for static export compatibility
+   * Trailing slash for cleaner URLs
    */
   trailingSlash: true,
 };

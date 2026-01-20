@@ -1,5 +1,3 @@
-'use client';
-
 import type { TextComponent } from '@/lib/contentstack/components';
 
 interface TextBlockProps {

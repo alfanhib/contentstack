@@ -1,4 +1,5 @@
 import { getStack } from './client';
+import { getContentstackLocale } from './config';
 import type { PageComponent } from './components';
 
 /**
@@ -6,11 +7,19 @@ import type { PageComponent } from './components';
  */
 
 // Content type identifiers
-export type ContentTypeUid = 
+export type ContentTypeUid =
   | 'home_page'
   | 'article'
   | 'article_listing_page'
   | 'landing_page';
+
+/**
+ * Options for fetching personalized content
+ */
+export interface PersonalizeOptions {
+  /** Variant aliases to fetch (from Personalize SDK) */
+  variantAliases?: string[];
+}
 
 // Base page fields
 export interface BasePage {
@@ -116,19 +125,24 @@ const ROUTABLE_CONTENT_TYPES: ContentTypeUid[] = [
 
 /**
  * Get page by URL - searches all content types
+ * Supports personalization variants
  */
-export async function getPageByUrl(url: string, locale?: string): Promise<PageResult | null> {
+export async function getPageByUrl(
+  url: string,
+  locale?: string,
+  personalizeOptions?: PersonalizeOptions
+): Promise<PageResult | null> {
   const stack = getStack();
-  
+
   // Normalize URL - ensure it starts with /
   const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-  
+
   // Search each content type for matching URL
   for (const contentType of ROUTABLE_CONTENT_TYPES) {
     try {
       const query = stack.ContentType(contentType).Query();
       query.where('url', normalizedUrl);
-      
+
       // Include common references based on content type
       if (contentType === 'home_page') {
         query.includeReference(['hero']);
@@ -137,25 +151,33 @@ export async function getPageByUrl(url: string, locale?: string): Promise<PageRe
       } else if (contentType === 'article') {
         query.includeReference(['related_articles']);
       }
-      
-      if (locale) {
-        query.language(locale);
+
+      // Apply locale (skip for master locale)
+      const csLocale = getContentstackLocale(locale);
+      if (csLocale) {
+        query.language(csLocale);
       }
-      
+
+      // Add variant aliases for personalization
+      if (personalizeOptions?.variantAliases?.length) {
+        query.addParam('include_variant', 'true');
+        query.addParam('variant_alias', personalizeOptions.variantAliases.join(','));
+      }
+
       const result = await query.toJSON().find();
       const entry = result?.[0]?.[0];
-      
+
       if (entry) {
         return {
           entry: { ...entry, _content_type_uid: contentType } as PageEntry,
           contentType,
         };
       }
-    } catch (error) {
-      console.error(`[Contentstack] Error fetching ${contentType}:`, error);
+    } catch {
+      // Continue to next content type
     }
   }
-  
+
   return null;
 }
 
@@ -189,10 +211,12 @@ export async function getArticles(
       query.query({ $or: filters });
     }
     
-    if (locale) {
-      query.language(locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
-    
+
     query.includeCount();
     
     const result = await query.toJSON().find();
@@ -204,8 +228,7 @@ export async function getArticles(
       })),
       total: result?.[1] || 0,
     };
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch articles:', error);
+  } catch {
     return { articles: [], total: 0 };
   }
 }
@@ -229,15 +252,17 @@ export async function getRelatedArticles(
     
     // Filter by same taxonomies
     if (taxonomies.length > 0) {
-      const filters = taxonomies.map(t => ({
+      const filters = taxonomies.map((t) => ({
         'taxonomies.taxonomy_uid': t.taxonomy_uid,
         'taxonomies.term_uid': t.term_uid,
       }));
       query.query({ $or: filters });
     }
-    
-    if (locale) {
-      query.language(locale);
+
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
     
     const result = await query.toJSON().find();
@@ -246,8 +271,7 @@ export async function getRelatedArticles(
       ...a,
       _content_type_uid: 'article' as const,
     }));
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch related articles:', error);
+  } catch {
     return [];
   }
 }
@@ -258,28 +282,31 @@ export async function getRelatedArticles(
 export async function getAllPagePaths(locale?: string): Promise<string[]> {
   const paths: string[] = [];
   const stack = getStack();
-  
+
+  // Apply locale (skip for master locale)
+  const csLocale = getContentstackLocale(locale);
+
   for (const contentType of ROUTABLE_CONTENT_TYPES) {
     try {
       const query = stack.ContentType(contentType).Query();
       query.only(['url']);
-      
-      if (locale) {
-        query.language(locale);
+
+      if (csLocale) {
+        query.language(csLocale);
       }
-      
+
       const result = await query.toJSON().find();
       const entries = result?.[0] || [];
-      
+
       entries.forEach((entry: { url?: string }) => {
         if (entry.url && entry.url !== '/') {
           paths.push(entry.url);
         }
       });
-    } catch (error) {
-      console.error(`[Contentstack] Error fetching paths for ${contentType}:`, error);
+    } catch {
+      // Continue to next content type
     }
   }
-  
+
   return paths;
 }

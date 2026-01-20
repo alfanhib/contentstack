@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { WebConfig, MegaMenu } from '@/lib/contentstack';
+import { locales, localeNames, type Locale } from '@config/locales';
 
 interface HeaderProps {
   webConfig?: WebConfig | null;
@@ -14,6 +15,7 @@ interface HeaderProps {
 export function Header({ webConfig, megaMenus = [], locale }: HeaderProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   const logo = webConfig?.logo;
   const navigation = webConfig?.main_navigation?.[0];
@@ -29,6 +31,9 @@ export function Header({ webConfig, megaMenus = [], locale }: HeaderProps) {
     if (!url) return '#';
     return url.startsWith('/') ? `/${locale}${url}` : url;
   };
+
+  // Get current locale display name
+  const currentLocaleName = localeNames[locale as Locale] || locale.toUpperCase();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
@@ -134,14 +139,49 @@ export function Header({ webConfig, megaMenus = [], locale }: HeaderProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
-            {/* Language Selector */}
-            <div className="hidden sm:block">
-              <Link
-                href={locale === 'en' ? '/id' : '/en'}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition"
+            {/* Language Selector Dropdown */}
+            <div 
+              className="relative hidden sm:block"
+              onMouseEnter={() => setLangMenuOpen(true)}
+              onMouseLeave={() => setLangMenuOpen(false)}
+            >
+              <button
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition"
               >
-                {locale.toUpperCase()}
-              </Link>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                {currentLocaleName}
+                <svg
+                  className={`w-3 h-3 transition-transform ${langMenuOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Language Dropdown */}
+              {langMenuOpen && (
+                <div className="absolute top-full right-0 pt-1">
+                  <div className="bg-white rounded-lg shadow-lg border border-slate-100 py-1 min-w-[140px]">
+                    {locales.map((loc) => (
+                      <Link
+                        key={loc}
+                        href={`/${loc}`}
+                        className={`block px-4 py-2 text-sm transition ${
+                          loc === locale
+                            ? 'text-emerald-600 bg-emerald-50 font-medium'
+                            : 'text-slate-700 hover:text-emerald-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {localeNames[loc]}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -203,12 +243,25 @@ export function Header({ webConfig, megaMenus = [], locale }: HeaderProps) {
 
             {/* Mobile Language Selector */}
             <div className="border-t border-slate-100 mt-4 pt-4 px-4">
-              <Link
-                href={locale === 'en' ? '/id' : '/en'}
-                className="text-sm font-medium text-slate-600 hover:text-emerald-600"
-              >
-                Switch to {locale === 'en' ? 'Indonesian' : 'English'}
-              </Link>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Language
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {locales.map((loc) => (
+                  <Link
+                    key={loc}
+                    href={`/${loc}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition ${
+                      loc === locale
+                        ? 'bg-emerald-500 text-white font-medium'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {localeNames[loc]}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}

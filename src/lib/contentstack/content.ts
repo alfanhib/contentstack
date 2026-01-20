@@ -1,4 +1,5 @@
 import { getStack } from './client';
+import { getContentstackLocale } from './config';
 
 /**
  * Content Types Response from Contentstack
@@ -42,8 +43,7 @@ export async function getContentTypes(): Promise<ContentTypeSchema[]> {
     const stack = getStack();
     const response = await stack.getContentTypes() as ContentTypesResponse;
     return response.content_types || [];
-  } catch (error) {
-    console.error('[Contentstack] Failed to fetch content types:', error);
+  } catch {
     return [];
   }
 }
@@ -63,8 +63,10 @@ export async function getEntriesByContentType<T = ContentEntry>(
     const stack = getStack();
     const query = stack.ContentType(contentTypeUid).Query();
 
-    if (options?.locale) {
-      query.language(options.locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(options?.locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     if (options?.limit) {
@@ -79,8 +81,7 @@ export async function getEntriesByContentType<T = ContentEntry>(
 
     const result = await query.toJSON().find();
     return (result?.[0] as T[]) || [];
-  } catch (error) {
-    console.error(`[Contentstack] Failed to fetch entries for ${contentTypeUid}:`, error);
+  } catch {
     return [];
   }
 }
@@ -100,14 +101,15 @@ export async function getEntryByUrl<T = ContentEntry>(
     query.where('url', url);
     query.limit(1);
 
-    if (locale) {
-      query.language(locale);
+    // Apply locale (skip for master locale)
+    const csLocale = getContentstackLocale(locale);
+    if (csLocale) {
+      query.language(csLocale);
     }
 
     const result = await query.toJSON().find();
     return (result?.[0]?.[0] as T) || null;
-  } catch (error) {
-    console.error(`[Contentstack] Failed to fetch entry by url ${url}:`, error);
+  } catch {
     return null;
   }
 }

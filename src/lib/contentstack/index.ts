@@ -2,8 +2,14 @@
 export { getStack, resetStack, Contentstack } from './client';
 
 // Configuration
-export { getContentstackConfig, contentstackConfig } from './config';
-export type { ContentstackConfig } from './config';
+export {
+  getContentstackConfig,
+  getPersonalizeConfig,
+  getContentstackLocale,
+  contentstackConfig,
+  MASTER_LOCALE,
+} from './config';
+export type { ContentstackConfig, PersonalizeConfig } from './config';
 
 // Content fetching - Dynamic approach
 export {
@@ -84,6 +90,7 @@ export type {
   HomePage,
   PageEntry,
   PageResult,
+  PersonalizeOptions,
 } from './pages';
 
 // Query builders (legacy)

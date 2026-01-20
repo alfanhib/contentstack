@@ -1,5 +1,3 @@
-'use client';
-
 import type { 
   PageComponent,
   CardCollectionComponent,
@@ -59,14 +57,11 @@ export function ComponentRenderer({ components, locale }: ComponentRendererProps
               <TextBlock
                 key={key}
                 data={(component as TextComponent).text}
-                locale={locale}
               />
             );
 
-          default:
-            // Log unknown component type for debugging
-            console.warn(`Unknown component type: ${componentType}`, component);
-            return null;
+        default:
+          return null;
         }
       })}
     </>

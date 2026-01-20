@@ -1,5 +1,3 @@
-'use client';
-
 import type { LandingPage } from '@/lib/contentstack';
 import { ComponentRenderer } from '@/components/blocks';
 

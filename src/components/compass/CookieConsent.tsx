@@ -25,13 +25,6 @@ export function CookieConsent({ consentModal }: CookieConsentProps) {
   const handleConsent = useCallback((action: 'optIn' | 'optOut') => {
     localStorage.setItem(CONSENT_KEY, action);
     setShowBanner(false);
-    
-    // You can add analytics tracking here based on the action
-    if (action === 'optIn') {
-      console.log('[Cookie Consent] User accepted cookies');
-    } else {
-      console.log('[Cookie Consent] User rejected cookies');
-    }
   }, []);
 
   // Don't render during SSR (null) or if consent already given (false) or no modal config
