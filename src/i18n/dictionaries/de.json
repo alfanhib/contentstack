@@ -1,0 +1,22 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "retry": "Erneut versuchen",
+    "close": "Schließen",
+    "menu": "Menü",
+    "search": "Suchen"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "login": "Anmelden",
+    "signup": "Registrieren"
+  },
+  "footer": {
+    "copyright": "© 2025 Pepperstone. Alle Rechte vorbehalten.",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "termsOfService": "Nutzungsbedingungen"
+  }
+}
